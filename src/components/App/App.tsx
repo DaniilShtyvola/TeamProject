@@ -107,8 +107,6 @@ const App: FC<AppProps> = () => {
          setCars(carsData);
          setCurrentPage(1);
 
-         console.log(regions);
-
          setError('');
       } catch (error) {
          console.error('Error fetching cars data:', error);
@@ -206,7 +204,7 @@ const App: FC<AppProps> = () => {
                   disabled={currentPage === cars.length}
                />
             </Pagination>
-            <UkraineMap regions={regions}/>
+            <UkraineMap regions={regions} />
          </AppContainer>
       </AppWrapper>
    );
