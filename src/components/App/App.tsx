@@ -5,6 +5,7 @@ import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination } 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CarCard from '../CarCard/CarCard';
 import { AppWrapper, AppContainer } from './App.styled';
+import getPrice from '../../utils/getPrice';
 
 interface AppProps { }
 
@@ -15,17 +16,19 @@ interface Car {
    vendor: string;
    model: string;
    color: {
-      ua: string;
+     ua: string;
    };
    address: string;
    kind: {
-      ua: string;
+     ua: string;
    };
    fuel: {
-      ua: string;
+     ua: string;
    };
    photo_url: string;
-}
+   price: string;
+ }
+ 
 
 const App: FC<AppProps> = () => {
    const [cars, setCars] = useState<Car[]>([]);
@@ -35,7 +38,7 @@ const App: FC<AppProps> = () => {
    const [error, setError] = useState<string>('');
 
    const fetchCars = async () => {
-      const key: string = "";
+      const key: string = "fcdc6fdc64d18e2b37f885c46f130162";
 
       if (key == "") {
          setError(`Відсутній API ключ.`);
@@ -73,7 +76,8 @@ const App: FC<AppProps> = () => {
                fuel: {
                   ua: operation.fuel.ua.charAt(0).toUpperCase() + operation.fuel.ua.slice(1).toLowerCase(),
                },
-               photo_url: ''
+               photo_url: '',
+               price: await getPrice(searchRequest.replace(/\s+/g, '')),
             };
 
             const removeSpaces = (str: string) => {

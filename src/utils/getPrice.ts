@@ -1,29 +1,25 @@
 import axios from 'axios';
 
-interface PriceData {
-  UAH: number;
-  USD: number;
-}
-
-const getPrice = async (number: string): Promise<PriceData> => {
+const getPrice = async (number: string) => {
   try {
-    const response = await axios.post('https://auto.ria.com/bff/average-price/public/data', {
+    const response = await axios.post('https://cors-anywhere.herokuapp.com/https://auto.ria.com/bff/average-price/public/data', {
       langId: 4,
       period: 365,
       params: {
         omniId: number,
       },
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      }
     });
 
     const data = response.data;
 
-    const UAH = parseInt(data.similarCars[0].price.all.UAH.value.replace(' ', ''), 10);
-    const USD = parseInt(data.similarCars[0].price.all.USD.value.replace(' ', ''), 10);
+    const UAH = parseInt(data.statisticData[0].price.UAH);
 
-    return {
-      UAH,
-      USD,
-    };
+    const formattedUAH = UAH.toLocaleString('ru-RU');
+
+    return formattedUAH;
   } catch (error) {
     console.error('Error fetching price data:', error);
     throw error;

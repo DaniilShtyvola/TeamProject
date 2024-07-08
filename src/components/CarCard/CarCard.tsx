@@ -8,17 +8,18 @@ interface Car {
    vendor: string;
    model: string;
    color: {
-      ua: string;
+     ua: string;
    };
    address: string;
    kind: {
-      ua: string;
+     ua: string;
    };
    fuel: {
-      ua: string;
+     ua: string;
    };
    photo_url: string;
-}
+   price: string;
+ }
 
 interface CarCardProps {
    car: Car;
@@ -42,7 +43,8 @@ const CarCard: React.FC<CarCardProps> = ({ car }) => {
                <strong>Адреса: </strong> {car.address}<br />
                <strong>Тип: </strong> {car.kind.ua}<br />
                <strong>Паливо: </strong> {car.fuel.ua}<br />
-               <strong>Зареєстровано: </strong> {car.registered_at}
+               <strong>Зареєстровано: </strong> {car.registered_at}<br />
+               <strong>Ціна: </strong> {car.price} UAH
             </Card.Text>
          </Card.Body>
       </Card>
