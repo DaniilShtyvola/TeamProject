@@ -5,6 +5,7 @@ import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination } 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CarCard from '../CarCard/CarCard';
 import { AppWrapper, AppContainer } from './App.styled';
+import getPrice from '../../utils/getPrice';
 
 import UkraineMap from '../CustomUkraineMap/CustomUkraineMap';
 
@@ -17,17 +18,19 @@ interface Car {
    vendor: string;
    model: string;
    color: {
-      ua: string;
+     ua: string;
    };
    address: string;
    kind: {
-      ua: string;
+     ua: string;
    };
    fuel: {
-      ua: string;
+     ua: string;
    };
    photo_url: string;
+   price: string;
 }
+ 
 
 const App: FC<AppProps> = () => {
    const [cars, setCars] = useState<Car[]>([]);
@@ -38,7 +41,7 @@ const App: FC<AppProps> = () => {
    const [error, setError] = useState<string>('');
 
    const fetchCars = async () => {
-      const key: string = "";
+      const key: string = "fcdc6fdc64d18e2b37f885c46f130162";
 
       if (key == "") {
          setError(`Відсутній API ключ.`);
@@ -56,7 +59,7 @@ const App: FC<AppProps> = () => {
 
          setRegions([]);
 
-         const carsData: Car[] = await Promise.all(response.data.operations.map(async (operation: any) => {
+         const carsData: Car[] = await Promise.all(response.data.operations.map(async (operation: any, index: number) => {
             const carData: Car = {
                isLast: operation.isLast,
                registered_at: operation.registered_at,
@@ -73,7 +76,8 @@ const App: FC<AppProps> = () => {
                fuel: {
                   ua: operation.fuel.ua.charAt(0).toUpperCase() + operation.fuel.ua.slice(1).toLowerCase(),
                },
-               photo_url: ''
+               photo_url: '',
+               price: index === 0 ? await getPrice(searchRequest.replace(/\s+/g, '')) + ' UAH' : 'Н/Д',
             };
 
             setRegions(prevRegions => [...prevRegions, carData.address]);
