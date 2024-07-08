@@ -27,7 +27,7 @@ interface Car {
    };
    photo_url: string;
    price: string;
- }
+}
  
 
 const App: FC<AppProps> = () => {
