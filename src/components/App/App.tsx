@@ -6,6 +6,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import CarCard from '../CarCard/CarCard';
 import { AppWrapper, AppContainer } from './App.styled';
 
+import UkraineMap from '../CustomUkraineMap/CustomUkraineMap';
+
 interface AppProps { }
 
 interface Car {
@@ -29,6 +31,7 @@ interface Car {
 
 const App: FC<AppProps> = () => {
    const [cars, setCars] = useState<Car[]>([]);
+   const [regions, setRegions] = useState<string[]>([]);
    const [currentPage, setCurrentPage] = useState(1);
    const [searchRequest, setSearchRequest] = useState<string>('');
    const [radioValue, setRadioValue] = useState('1');
@@ -56,6 +59,8 @@ const App: FC<AppProps> = () => {
             }
          });
 
+         setRegions([]);
+
          const carsData: Car[] = await Promise.all(response.data.operations.map(async (operation: any) => {
             const carData: Car = {
                isLast: operation.isLast,
@@ -75,6 +80,8 @@ const App: FC<AppProps> = () => {
                },
                photo_url: ''
             };
+
+            setRegions(prevRegions => [...prevRegions, carData.address]);
 
             const removeSpaces = (str: string) => {
                return str.toLowerCase().replace(/[^\w\s-]/gi, '').replace(/\s+/g, '-');
@@ -197,8 +204,9 @@ const App: FC<AppProps> = () => {
                   disabled={currentPage === cars.length}
                />
             </Pagination>
+            <UkraineMap regions={regions} />
          </AppContainer>
-      </AppWrapper >
+      </AppWrapper>
    );
 };
 
