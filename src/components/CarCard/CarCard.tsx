@@ -19,16 +19,17 @@ interface Car {
    };
    photo_url: string;
    price: string;
- }
-
+}
 
 interface CarCardProps {
    car: Car;
+   onCarSelect?: (car: Car) => void;
+   isSelected?: boolean;
 }
 
-const CarCard: React.FC<CarCardProps> = ({ car }) => {
+const CarCard: React.FC<CarCardProps> = ({ car, onCarSelect, isSelected }) => {
    return (
-      <Card style={{ width: '18rem', marginBottom: '1rem' }}>
+      <Card style={{ width: '18rem', marginBottom: '1rem', border: isSelected ? '2px solid green' : '' }} onClick={() => onCarSelect && onCarSelect(car)}>
          <Card.Body>
             <Card.Title>
                {car.vendor} {car.model}
