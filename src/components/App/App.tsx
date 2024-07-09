@@ -1,16 +1,20 @@
 import React, { FC, useState } from 'react';
-import axios from 'axios';
-import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import CarCard from '../CarCard/CarCard';
-import { AppWrapper, AppContainer } from './App.styled';
-import getPrice from '../../utils/getPrice';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faScaleBalanced } from '@fortawesome/free-solid-svg-icons';
-import CompareModal from '../Modals/CompareModal';
-import UkraineMap from '../CustomUkraineMap/CustomUkraineMap';
+import { AppWrapper, AppContainer, TopPanel, DropDownContainer, CustomForm } from './App.styled';
 
-interface AppProps {}
+import axios from 'axios';
+
+import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination, Dropdown } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+import CarCard from '../CarCard/CarCard';
+import getPrice from '../../utils/getPrice';
+import CompareModal from '../Modals/CompareModal';
+import MapModal from '../Modals/MapModal';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faScaleBalanced, faMapLocationDot, faEraser, faScrewdriverWrench, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+
+interface AppProps { }
 
 export interface Car {
    isLast: boolean;
@@ -19,14 +23,14 @@ export interface Car {
    vendor: string;
    model: string;
    color: {
-     ua: string;
+      ua: string;
    };
    address: string;
    kind: {
-     ua: string;
+      ua: string;
    };
    fuel: {
-     ua: string;
+      ua: string;
    };
    photo_url: string;
    price: string;
@@ -35,13 +39,16 @@ export interface Car {
 
 const App: FC<AppProps> = () => {
    const [cars, setCars] = useState<Car[]>([]);
+   const [selectedCars, setSelectedCars] = useState<Car[]>([]);
    const [regions, setRegions] = useState<string[]>([]);
+
    const [currentPage, setCurrentPage] = useState(1);
    const [searchRequest, setSearchRequest] = useState<string>('');
    const [radioValue, setRadioValue] = useState('1');
    const [error, setError] = useState<string>('');
-   const [selectedCars, setSelectedCars] = useState<Car[]>([]);
-   const [showModal, setShowModal] = useState(false);
+
+   const [showCompareModal, setShowCompareModal] = useState(false);
+   const [showMapModal, setShowMapModal] = useState(false);
 
    const fetchCars = async () => {
       const key: string = "fcdc6fdc64d18e2b37f885c46f130162";
@@ -60,13 +67,15 @@ const App: FC<AppProps> = () => {
             }
          });
 
+         setRegions([]);
+
          const carsData: Car[] = await Promise.all(response.data.operations.map(async (operation: any, index: number) => {
             let price = 'Н/Д';
             if (index === 0) {
                try {
-                     const fetchedPrice = await getPrice(searchRequest.replace(/\s+/g, ''));
-                     price = fetchedPrice + ' UAH';
-               } catch (error) {}
+                  const fetchedPrice = await getPrice(searchRequest.replace(/\s+/g, ''));
+                  price = fetchedPrice + ' UAH';
+               } catch (error) { }
             }
 
             const carData: Car = {
@@ -106,7 +115,8 @@ const App: FC<AppProps> = () => {
                carData.photo_url = imageResponse.data.catalog_model.photo_url;
             } catch (error) {
                console.error('Error fetching car image:', error);
-               setError(`Не вдалося отримати зображення авто ${removeSpaces(operation.vendor)} ${removeSpaces(operation.model)}.`);
+
+               carData.photo_url = "https://baza-gai.com.ua/auto-placeholder.svg";
             }
 
             return carData;
@@ -148,7 +158,8 @@ const App: FC<AppProps> = () => {
 
    const handleCompareClick = () => {
       if (selectedCars.length === 2) {
-         setShowModal(true);
+         setShowCompareModal(true);
+         setError('');
       } else {
          setError('Будь ласка, виберіть два автомобілі для порівняння.');
       }
@@ -158,15 +169,42 @@ const App: FC<AppProps> = () => {
       setSelectedCars([]);
    };
 
+   const handleMapClick = () => {
+      console.log(regions);
+
+      setShowMapModal(true);
+   };
+
    const radios = [
-      { name: 'Номер або VIN', value: '1' }
+      { name: 'Номер/VIN', value: '1' },
+      { name: 'Область', value: '2' },
+      { name: 'Модель', value: '3' }
    ];
 
    return (
       <AppWrapper>
          <AppContainer>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
-               <ButtonGroup style={{ width: '80%' }}>
+            <TopPanel style={{ width: '100%' }}>
+               <DropDownContainer>
+                  <Dropdown style={{ left: "-60px" }}>
+                     <Dropdown.Toggle variant="secondary" id="dropdown-basic">
+                        <FontAwesomeIcon icon={faScrewdriverWrench} />
+                     </Dropdown.Toggle>
+                     <Dropdown.Menu style={{ minWidth: 0 }}>
+                        <Dropdown.Item onClick={handleMapClick}>
+                           <FontAwesomeIcon icon={faMapLocationDot} style={{ marginLeft: "1px" }} />
+                        </Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Item onClick={handleCompareClick}>
+                           <FontAwesomeIcon icon={faScaleBalanced} />
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={handleClearSelection}>
+                           <FontAwesomeIcon icon={faEraser} />
+                        </Dropdown.Item>
+                     </Dropdown.Menu>
+                  </Dropdown>
+               </DropDownContainer>
+               <ButtonGroup style={{ width: '100%' }}>
                   {radios.map((radio, idx) => (
                      <ToggleButton
                         key={idx}
@@ -181,16 +219,9 @@ const App: FC<AppProps> = () => {
                         {radio.name}
                      </ToggleButton>
                   ))}
-                  <Button variant="secondary" onClick={handleCompareClick} style={{ width: '80%' }}>
-                     <FontAwesomeIcon icon={faScaleBalanced} />
-                  </Button>
-                  <Button variant="danger" onClick={handleClearSelection} style={{ fontSize: '80%', width: '100%' }}> 
-                     Очистити вибір
-                  </Button>
                </ButtonGroup>
-                  
-            </div>
-            <Form style={{ width: '100%', marginBottom: '1rem', marginTop: '0.5rem' }}>
+            </TopPanel>
+            <CustomForm>
                <Row>
                   <Form.Label>{'Перевірка авто за номером та VIN'}</Form.Label>
                </Row>
@@ -204,15 +235,12 @@ const App: FC<AppProps> = () => {
                      />
                   </Col>
                   <Col xs="auto">
-                     <Button variant="primary" onClick={handleSearchClick}>Пошук</Button>
+                     <Button variant="primary" onClick={handleSearchClick}>
+                        <FontAwesomeIcon icon={faMagnifyingGlass} />
+                     </Button>
                   </Col>
                </Row>
-            </Form>
-            {error && (
-               <Alert variant="danger">
-                  {error}
-               </Alert>
-            )}
+            </CustomForm>
             <Row>
                {paginatedCars.map((car, index) => (
                   <Col key={index} lg={4} md={6} sm={12}>
@@ -220,7 +248,8 @@ const App: FC<AppProps> = () => {
                   </Col>
                ))}
             </Row>
-            <Pagination>
+            {cars.length > 0 && (
+               <Pagination style={{ marginTop: "1rem" }}>
                <Pagination.Prev
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
@@ -239,13 +268,21 @@ const App: FC<AppProps> = () => {
                   disabled={currentPage === cars.length}
                />
             </Pagination>
+            )}
             <CompareModal
-               showModal={showModal}
-               setShowModal={setShowModal}
+               showModal={showCompareModal}
+               setShowModal={setShowCompareModal}
                selectedCars={selectedCars}
             />
-            {cars.length > 0 && (
-               <UkraineMap regions={regions} />
+            <MapModal
+               showModal={showMapModal}
+               setShowModal={setShowMapModal}
+               regions={regions}
+            />
+            {error && (
+               <Alert variant="danger" style={{ textAlign: "center" }}>
+                  {error}
+               </Alert>
             )}
          </AppContainer>
       </AppWrapper>

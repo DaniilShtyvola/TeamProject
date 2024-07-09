@@ -1,7 +1,15 @@
-import React, { FC } from 'react';
-import { Modal, Button, Row, Col } from 'react-bootstrap';
+import { FC } from 'react';
+import { Modal, Row } from 'react-bootstrap';
+
 import CarCard from '../CarCard/CarCard';
 import { Car } from '../App/App';
+
+import styled from 'styled-components';
+const CustomModal = styled(Modal)`
+    .modal-dialog {
+        max-width: 618px;
+    }
+`;
 
 interface CompareModalProps {
     showModal: boolean;
@@ -11,23 +19,18 @@ interface CompareModalProps {
 
 const CompareModal: FC<CompareModalProps> = ({ showModal, setShowModal, selectedCars }) => {
     return (
-        <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+        <CustomModal show={showModal} onHide={() => setShowModal(false)}>
             <Modal.Header closeButton>
                 <Modal.Title>Порівняння автомобілів</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <Row>
+                <Row style={{ justifyContent: "space-around" }}>
                     {selectedCars.map((car, index) => (
-                        <Col key={index} md={6}>
-                            <CarCard car={car} />
-                        </Col>
+                        <CarCard key={index} car={car} />
                     ))}
                 </Row>
             </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={() => setShowModal(false)}>Закрити</Button>
-            </Modal.Footer>
-        </Modal>
+        </CustomModal>
     );
 };
 
