@@ -61,6 +61,14 @@ const App: FC<AppProps> = () => {
 
          const carsData: Car[] = await Promise.all(response.data.operations.map(async (operation: any, index: number) => {
 
+            let price = 'Н/Д';
+            if (index === 0) {
+               try {
+                     const fetchedPrice = await getPrice(searchRequest.replace(/\s+/g, ''));
+                     price = fetchedPrice + ' UAH';
+               } catch (error) {}
+            }
+
             const carData: Car = {
                isLast: operation.isLast,
                registered_at: operation.registered_at,
@@ -78,7 +86,7 @@ const App: FC<AppProps> = () => {
                   ua: operation.fuel.ua.charAt(0).toUpperCase() + operation.fuel.ua.slice(1).toLowerCase(),
                },
                photo_url: '',
-               price: index === 0 ? await getPrice(searchRequest.replace(/\s+/g, '')) + ' UAH' : 'Н/Д',
+               price: price,
             };
 
             const removeSpaces = (str: string) => {
