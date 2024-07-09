@@ -7,6 +7,8 @@ import { AppWrapper, AppContainer } from './App.styled';
 import getPrice from '../../utils/getPrice';
 import { FaBalanceScale } from 'react-icons/fa';
 
+import UkraineMap from '../CustomUkraineMap/CustomUkraineMap';
+
 interface AppProps { }
 
 interface Car {
@@ -31,6 +33,7 @@ interface Car {
 
 const App: FC<AppProps> = () => {
    const [cars, setCars] = useState<Car[]>([]);
+   const [regions, setRegions] = useState<string[]>([]);
    const [currentPage, setCurrentPage] = useState(1);
    const [searchRequest, setSearchRequest] = useState<string>('');
    const [radioValue, setRadioValue] = useState('1');
@@ -47,12 +50,7 @@ const App: FC<AppProps> = () => {
       }
 
       try {
-         let url = '';
-         if (radioValue === '1') {
-            url = `https://baza-gai.com.ua/nomer/${searchRequest.replace(/\s+/g, '')}`;
-         } else if (radioValue === '2') {
-            url = `https://baza-gai.com.ua/vin/${searchRequest.replace(/\s+/g, '')}`;
-         }
+         let url = `https://baza-gai.com.ua/vin/${searchRequest.replace(/\s+/g, '')}`;
          const response = await axios.get(url, {
             headers: {
                "Accept": "application/json",
@@ -89,6 +87,8 @@ const App: FC<AppProps> = () => {
                price: price,
             };
 
+            setRegions(prevRegions => [...prevRegions, carData.address]);
+
             const removeSpaces = (str: string) => {
                return str.toLowerCase().replace(/[^\w\s-]/gi, '').replace(/\s+/g, '-');
             };
@@ -115,7 +115,7 @@ const App: FC<AppProps> = () => {
          setError('');
       } catch (error) {
          console.error('Error fetching cars data:', error);
-         setError(radioValue === '1' ? 'Неправильний номер авто.' : 'Неправильний VIN код.');
+         setError('Нічого не знайдено.');
       }
    };
 
@@ -153,8 +153,7 @@ const App: FC<AppProps> = () => {
    };
 
    const radios = [
-      { name: 'Шукати по номеру', value: '1' },
-      { name: 'Шукати по VIN', value: '2' }
+      { name: 'Номер або VIN', value: '1' }
    ];
 
    return (
@@ -183,13 +182,13 @@ const App: FC<AppProps> = () => {
             </div>
             <Form style={{ width: '100%', marginBottom: '1rem', marginTop: '0.5rem' }}>
                <Row>
-                  <Form.Label>{radioValue === '1' ? 'Введіть номер машини:' : 'Введіть VIN машини:'}</Form.Label>
+                  <Form.Label>{'Перевірка авто за номером та VIN'}</Form.Label>
                </Row>
                <Row>
                   <Col style={{ paddingRight: 0 }}>
                      <Form.Control
                         type="text"
-                        placeholder={radioValue === '1' ? 'Номерний знак' : 'VIN код'}
+                        placeholder={'Номерний знак або VIN'}
                         value={searchRequest}
                         onChange={handleInputChange}
                      />
@@ -247,6 +246,30 @@ const App: FC<AppProps> = () => {
                   <Button variant="secondary" onClick={() => setShowModal(false)}>Закрити</Button>
                </Modal.Footer>
             </Modal>
+            {cars.length > 0 && (
+               <>
+                  <Pagination>
+                     <Pagination.Prev
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                     />
+                     {Array.from({ length: cars.length }, (_, index) => (
+                        <Pagination.Item
+                           key={index}
+                           active={index + 1 === currentPage}
+                           onClick={() => handlePageChange(index + 1)}
+                        >
+                           {index + 1}
+                        </Pagination.Item>
+                     ))}
+                     <Pagination.Next
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === cars.length}
+                     />
+                  </Pagination>
+                  <UkraineMap regions={regions} />
+               </>
+            )}
          </AppContainer>
       </AppWrapper>
    );
