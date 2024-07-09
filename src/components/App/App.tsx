@@ -1,17 +1,18 @@
 import React, { FC, useState } from 'react';
 import axios from 'axios';
-import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination, Modal } from 'react-bootstrap';
+import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CarCard from '../CarCard/CarCard';
 import { AppWrapper, AppContainer } from './App.styled';
 import getPrice from '../../utils/getPrice';
-import { FaBalanceScale } from 'react-icons/fa';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faScaleBalanced } from '@fortawesome/free-solid-svg-icons';
+import CompareModal from '../Modals/CompareModal';
 import UkraineMap from '../CustomUkraineMap/CustomUkraineMap';
 
-interface AppProps { }
+interface AppProps {}
 
-interface Car {
+export interface Car {
    isLast: boolean;
    registered_at: string;
    model_year: number;
@@ -31,6 +32,7 @@ interface Car {
    price: string;
 }
 
+
 const App: FC<AppProps> = () => {
    const [cars, setCars] = useState<Car[]>([]);
    const [regions, setRegions] = useState<string[]>([]);
@@ -44,7 +46,7 @@ const App: FC<AppProps> = () => {
    const fetchCars = async () => {
       const key: string = "fcdc6fdc64d18e2b37f885c46f130162";
 
-      if (key == "") {
+      if (key === "") {
          setError(`Відсутній API ключ.`);
          return;
       }
@@ -152,6 +154,10 @@ const App: FC<AppProps> = () => {
       }
    };
 
+   const handleClearSelection = () => {
+      setSelectedCars([]);
+   };
+
    const radios = [
       { name: 'Номер або VIN', value: '1' }
    ];
@@ -175,10 +181,14 @@ const App: FC<AppProps> = () => {
                         {radio.name}
                      </ToggleButton>
                   ))}
+                  <Button variant="secondary" onClick={handleCompareClick} style={{ width: '80%' }}>
+                     <FontAwesomeIcon icon={faScaleBalanced} />
+                  </Button>
+                  <Button variant="danger" onClick={handleClearSelection} style={{ fontSize: '80%', width: '100%' }}> 
+                     Очистити вибір
+                  </Button>
                </ButtonGroup>
-               <Button variant="secondary" onClick={handleCompareClick}>
-                  <FaBalanceScale />
-               </Button>
+                  
             </div>
             <Form style={{ width: '100%', marginBottom: '1rem', marginTop: '0.5rem' }}>
                <Row>
@@ -229,46 +239,13 @@ const App: FC<AppProps> = () => {
                   disabled={currentPage === cars.length}
                />
             </Pagination>
-            <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-               <Modal.Header closeButton>
-                  <Modal.Title>Порівняння автомобілів</Modal.Title>
-               </Modal.Header>
-               <Modal.Body>
-                  <Row>
-                     {selectedCars.map((car, index) => (
-                        <Col key={index} md={6}>
-                           <CarCard car={car} />
-                        </Col>
-                     ))}
-                  </Row>
-               </Modal.Body>
-               <Modal.Footer>
-                  <Button variant="secondary" onClick={() => setShowModal(false)}>Закрити</Button>
-               </Modal.Footer>
-            </Modal>
+            <CompareModal
+               showModal={showModal}
+               setShowModal={setShowModal}
+               selectedCars={selectedCars}
+            />
             {cars.length > 0 && (
-               <>
-                  <Pagination>
-                     <Pagination.Prev
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                     />
-                     {Array.from({ length: cars.length }, (_, index) => (
-                        <Pagination.Item
-                           key={index}
-                           active={index + 1 === currentPage}
-                           onClick={() => handlePageChange(index + 1)}
-                        >
-                           {index + 1}
-                        </Pagination.Item>
-                     ))}
-                     <Pagination.Next
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === cars.length}
-                     />
-                  </Pagination>
-                  <UkraineMap regions={regions} />
-               </>
+               <UkraineMap regions={regions} />
             )}
          </AppContainer>
       </AppWrapper>
