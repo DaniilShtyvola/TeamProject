@@ -1,11 +1,11 @@
 import React, { FC, useState } from 'react';
 import axios from 'axios';
-
-import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination } from 'react-bootstrap';
+import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination, Modal } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CarCard from '../CarCard/CarCard';
 import { AppWrapper, AppContainer } from './App.styled';
 import getPrice from '../../utils/getPrice';
+import { FaBalanceScale } from 'react-icons/fa';
 
 interface AppProps { }
 
@@ -28,7 +28,6 @@ interface Car {
    photo_url: string;
    price: string;
 }
- 
 
 const App: FC<AppProps> = () => {
    const [cars, setCars] = useState<Car[]>([]);
@@ -36,6 +35,8 @@ const App: FC<AppProps> = () => {
    const [searchRequest, setSearchRequest] = useState<string>('');
    const [radioValue, setRadioValue] = useState('1');
    const [error, setError] = useState<string>('');
+   const [selectedCars, setSelectedCars] = useState<Car[]>([]);
+   const [showModal, setShowModal] = useState(false);
 
    const fetchCars = async () => {
       const key: string = "fcdc6fdc64d18e2b37f885c46f130162";
@@ -60,7 +61,6 @@ const App: FC<AppProps> = () => {
          });
 
          const carsData: Car[] = await Promise.all(response.data.operations.map(async (operation: any, index: number) => {
-
             let price = 'Н/Д';
             if (index === 0) {
                try {
@@ -112,7 +112,6 @@ const App: FC<AppProps> = () => {
 
          setCars(carsData);
          setCurrentPage(1);
-
          setError('');
       } catch (error) {
          console.error('Error fetching cars data:', error);
@@ -137,6 +136,22 @@ const App: FC<AppProps> = () => {
       fetchCars();
    };
 
+   const handleCarSelect = (car: Car) => {
+      if (selectedCars.includes(car)) {
+         setSelectedCars(selectedCars.filter(c => c !== car));
+      } else if (selectedCars.length < 2) {
+         setSelectedCars([...selectedCars, car]);
+      }
+   };
+
+   const handleCompareClick = () => {
+      if (selectedCars.length === 2) {
+         setShowModal(true);
+      } else {
+         setError('Будь ласка, виберіть два автомобілі для порівняння.');
+      }
+   };
+
    const radios = [
       { name: 'Шукати по номеру', value: '1' },
       { name: 'Шукати по VIN', value: '2' }
@@ -145,22 +160,27 @@ const App: FC<AppProps> = () => {
    return (
       <AppWrapper>
          <AppContainer>
-            <ButtonGroup style={{ width: '100%', marginTop: '1rem' }}>
-               {radios.map((radio, idx) => (
-                  <ToggleButton
-                     key={idx}
-                     id={`radio-${idx}`}
-                     type="radio"
-                     variant="primary"
-                     value={radio.value}
-                     checked={radioValue === radio.value}
-                     onChange={(e) => setRadioValue(e.currentTarget.value)}
-                     style={{ fontSize: '80%', width: '100%' }}
-                  >
-                     {radio.name}
-                  </ToggleButton>
-               ))}
-            </ButtonGroup>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+               <ButtonGroup style={{ width: '80%' }}>
+                  {radios.map((radio, idx) => (
+                     <ToggleButton
+                        key={idx}
+                        id={`radio-${idx}`}
+                        type="radio"
+                        variant="primary"
+                        value={radio.value}
+                        checked={radioValue === radio.value}
+                        onChange={(e) => setRadioValue(e.currentTarget.value)}
+                        style={{ fontSize: '80%', width: '100%' }}
+                     >
+                        {radio.name}
+                     </ToggleButton>
+                  ))}
+               </ButtonGroup>
+               <Button variant="secondary" onClick={handleCompareClick}>
+                  <FaBalanceScale />
+               </Button>
+            </div>
             <Form style={{ width: '100%', marginBottom: '1rem', marginTop: '0.5rem' }}>
                <Row>
                   <Form.Label>{radioValue === '1' ? 'Введіть номер машини:' : 'Введіть VIN машини:'}</Form.Label>
@@ -187,7 +207,7 @@ const App: FC<AppProps> = () => {
             <Row>
                {paginatedCars.map((car, index) => (
                   <Col key={index} lg={4} md={6} sm={12}>
-                     <CarCard car={car} />
+                     <CarCard car={car} onCarSelect={handleCarSelect} isSelected={selectedCars.includes(car)} />
                   </Col>
                ))}
             </Row>
@@ -210,8 +230,25 @@ const App: FC<AppProps> = () => {
                   disabled={currentPage === cars.length}
                />
             </Pagination>
+            <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+               <Modal.Header closeButton>
+                  <Modal.Title>Порівняння автомобілів</Modal.Title>
+               </Modal.Header>
+               <Modal.Body>
+                  <Row>
+                     {selectedCars.map((car, index) => (
+                        <Col key={index} md={6}>
+                           <CarCard car={car} />
+                        </Col>
+                     ))}
+                  </Row>
+               </Modal.Body>
+               <Modal.Footer>
+                  <Button variant="secondary" onClick={() => setShowModal(false)}>Закрити</Button>
+               </Modal.Footer>
+            </Modal>
          </AppContainer>
-      </AppWrapper >
+      </AppWrapper>
    );
 };
 
