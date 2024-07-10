@@ -78,6 +78,8 @@ const App: FC<AppProps> = () => {
                } catch (error) { }
             }
 
+            console.log(response.data);
+
             const carData: Car = {
                isLast: operation.isLast,
                registered_at: operation.registered_at,
@@ -175,6 +177,12 @@ const App: FC<AppProps> = () => {
       setShowMapModal(true);
    };
 
+   const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setRadioValue(e.currentTarget.value);
+      
+      setCars([]);
+   };
+
    const radios = [
       { name: 'Номер/VIN', value: '1' },
       { name: 'Область', value: '2' },
@@ -213,7 +221,7 @@ const App: FC<AppProps> = () => {
                         variant="primary"
                         value={radio.value}
                         checked={radioValue === radio.value}
-                        onChange={(e) => setRadioValue(e.currentTarget.value)}
+                        onChange={handleCategoryChange}
                         style={{ fontSize: '80%', width: '100%' }}
                      >
                         {radio.name}
@@ -221,26 +229,28 @@ const App: FC<AppProps> = () => {
                   ))}
                </ButtonGroup>
             </TopPanel>
-            <CustomForm>
-               <Row>
-                  <Form.Label>{'Перевірка авто за номером та VIN'}</Form.Label>
-               </Row>
-               <Row>
-                  <Col style={{ paddingRight: 0 }}>
-                     <Form.Control
-                        type="text"
-                        placeholder={'Номерний знак або VIN'}
-                        value={searchRequest}
-                        onChange={handleInputChange}
-                     />
-                  </Col>
-                  <Col xs="auto">
-                     <Button variant="primary" onClick={handleSearchClick}>
-                        <FontAwesomeIcon icon={faMagnifyingGlass} />
-                     </Button>
-                  </Col>
-               </Row>
-            </CustomForm>
+            {radioValue == '1' && (
+               <CustomForm>
+                  <Row>
+                     <Form.Label>{'Перевірка авто за номером та VIN'}</Form.Label>
+                  </Row>
+                  <Row>
+                     <Col style={{ paddingRight: 0 }}>
+                        <Form.Control
+                           type="text"
+                           placeholder={'Номерний знак або VIN'}
+                           value={searchRequest}
+                           onChange={handleInputChange}
+                        />
+                     </Col>
+                     <Col xs="auto">
+                        <Button variant="primary" onClick={handleSearchClick}>
+                           <FontAwesomeIcon icon={faMagnifyingGlass} />
+                        </Button>
+                     </Col>
+                  </Row>
+               </CustomForm>
+            )}
             <Row>
                {paginatedCars.map((car, index) => (
                   <Col key={index} lg={4} md={6} sm={12}>
@@ -248,26 +258,26 @@ const App: FC<AppProps> = () => {
                   </Col>
                ))}
             </Row>
-            {cars.length > 0 && (
+            {cars.length > 1 && (
                <Pagination style={{ marginTop: "1rem" }}>
-               <Pagination.Prev
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-               />
-               {Array.from({ length: cars.length }, (_, index) => (
-                  <Pagination.Item
-                     key={index}
-                     active={index + 1 === currentPage}
-                     onClick={() => handlePageChange(index + 1)}
-                  >
-                     {index + 1}
-                  </Pagination.Item>
-               ))}
-               <Pagination.Next
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === cars.length}
-               />
-            </Pagination>
+                  <Pagination.Prev
+                     onClick={() => handlePageChange(currentPage - 1)}
+                     disabled={currentPage === 1}
+                  />
+                  {Array.from({ length: cars.length }, (_, index) => (
+                     <Pagination.Item
+                        key={index}
+                        active={index + 1 === currentPage}
+                        onClick={() => handlePageChange(index + 1)}
+                     >
+                        {index + 1}
+                     </Pagination.Item>
+                  ))}
+                  <Pagination.Next
+                     onClick={() => handlePageChange(currentPage + 1)}
+                     disabled={currentPage === cars.length}
+                  />
+               </Pagination>
             )}
             <CompareModal
                showModal={showCompareModal}
