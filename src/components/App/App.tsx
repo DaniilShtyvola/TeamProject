@@ -7,6 +7,7 @@ import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination, D
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import CarCard from '../CarCard/CarCard';
+import ModelCard from '../ModelCard/ModelCard';
 import getPrice from '../../utils/getPrice';
 import CompareModal from '../Modals/CompareModal';
 import MapModal from '../Modals/MapModal';
@@ -36,8 +37,20 @@ export interface Car {
    price: string;
 }
 
+export interface Model {
+   catalog_model: {
+      photo_url: string;
+      plate_count: number;
+      price_avg: number;
+      year_from: number;
+      year_to: number;
+   };
+   full_title: string;
+}
 
 const App: FC<AppProps> = () => {
+   const key: string = "9fbeb77af7305237b0cfb3273ab3e2f4";
+
    const [cars, setCars] = useState<Car[]>([]);
    const [selectedCars, setSelectedCars] = useState<Car[]>([]);
    const [regions, setRegions] = useState<string[]>([]);
@@ -50,9 +63,14 @@ const App: FC<AppProps> = () => {
    const [showCompareModal, setShowCompareModal] = useState(false);
    const [showMapModal, setShowMapModal] = useState(false);
 
-   const fetchCars = async () => {
-      const key: string = "fcdc6fdc64d18e2b37f885c46f130162";
+   const [modelSearch, setModelSearch] = useState({ vendor: '', model: '' });
+   const [model, setModel] = useState<Model>();
 
+   const removeSpaces = (str: string) => {
+      return str.toLowerCase().trim().replace(/[^\w\s-]/gi, '').replace(/\s+/g, '-');
+   };
+
+   const fetchCars = async () => {
       if (key === "") {
          setError(`Відсутній API ключ.`);
          return;
@@ -74,11 +92,9 @@ const App: FC<AppProps> = () => {
             if (index === 0) {
                try {
                   const fetchedPrice = await getPrice(searchRequest.replace(/\s+/g, ''));
-                  price = fetchedPrice + ' UAH';
+                  price = fetchedPrice + ' грн';
                } catch (error) { }
             }
-
-            console.log(response.data);
 
             const carData: Car = {
                isLast: operation.isLast,
@@ -101,10 +117,6 @@ const App: FC<AppProps> = () => {
             };
 
             setRegions(prevRegions => [...prevRegions, carData.address]);
-
-            const removeSpaces = (str: string) => {
-               return str.toLowerCase().replace(/[^\w\s-]/gi, '').replace(/\s+/g, '-');
-            };
 
             try {
                const imageResponse = await axios.get(`https://baza-gai.com.ua/make/${removeSpaces(operation.vendor)}/${removeSpaces(operation.model)}`, {
@@ -133,6 +145,42 @@ const App: FC<AppProps> = () => {
       }
    };
 
+   const fetchModel = async () => {
+      if (key === "") {
+         setError(`Відсутній API ключ.`);
+         return;
+      }
+
+      try {
+         let url = `https://baza-gai.com.ua/make/${removeSpaces(modelSearch.vendor)}/${removeSpaces(modelSearch.model)}`;
+         const response = await axios.get(url, {
+            headers: {
+               "Accept": "application/json",
+               "X-Api-Key": key
+            }
+         });
+
+         setRegions([]);
+
+         const modelData: Model = {
+            catalog_model: {
+               photo_url: response.data.catalog_model.photo_url,
+               plate_count: response.data.catalog_model.plate_count,
+               price_avg: response.data.catalog_model.price_avg,
+               year_from: response.data.catalog_model.year_from,
+               year_to: response.data.catalog_model.year_to,
+            },
+            full_title: response.data.full_title,
+         };
+
+         setModel(modelData);
+         setError('');
+      } catch (error) {
+         console.error('Error fetching model data:', error);
+         setError('Нічого не знайдено.');
+      }
+   };
+
    const handlePageChange = (page: number) => {
       setCurrentPage(page);
    };
@@ -144,10 +192,6 @@ const App: FC<AppProps> = () => {
 
    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       setSearchRequest(event.target.value);
-   };
-
-   const handleSearchClick = () => {
-      fetchCars();
    };
 
    const handleCarSelect = (car: Car) => {
@@ -172,15 +216,11 @@ const App: FC<AppProps> = () => {
    };
 
    const handleMapClick = () => {
-      console.log(regions);
-
       setShowMapModal(true);
    };
 
    const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setRadioValue(e.currentTarget.value);
-      
-      setCars([]);
    };
 
    const radios = [
@@ -193,9 +233,9 @@ const App: FC<AppProps> = () => {
       <AppWrapper>
          <AppContainer>
             <TopPanel style={{ width: '100%' }}>
-               <DropDownContainer>
+               <DropDownContainer >
                   <Dropdown style={{ left: "-60px" }}>
-                     <Dropdown.Toggle variant="secondary" id="dropdown-basic">
+                     <Dropdown.Toggle variant="secondary" id="dropdown-basic" disabled={radioValue !== '1'}>
                         <FontAwesomeIcon icon={faScrewdriverWrench} />
                      </Dropdown.Toggle>
                      <Dropdown.Menu style={{ minWidth: 0 }}>
@@ -230,54 +270,89 @@ const App: FC<AppProps> = () => {
                </ButtonGroup>
             </TopPanel>
             {radioValue == '1' && (
-               <CustomForm>
+               <>
+                  <CustomForm>
+                     <Row>
+                        <Form.Label>{'Перевірка авто за номером та VIN'}</Form.Label>
+                     </Row>
+                     <Row>
+                        <Col style={{ paddingRight: 0 }}>
+                           <Form.Control
+                              type="text"
+                              placeholder={'Номерний знак або VIN'}
+                              value={searchRequest}
+                              onChange={handleInputChange}
+                           />
+                        </Col>
+                        <Col xs="auto">
+                           <Button variant="primary" onClick={fetchCars}>
+                              <FontAwesomeIcon icon={faMagnifyingGlass} />
+                           </Button>
+                        </Col>
+                     </Row>
+                  </CustomForm>
                   <Row>
-                     <Form.Label>{'Перевірка авто за номером та VIN'}</Form.Label>
+                     {paginatedCars.map((car, index) => (
+                        <Col key={index} lg={4} md={6} sm={12}>
+                           <CarCard car={car} onCarSelect={handleCarSelect} isSelected={selectedCars.includes(car)} />
+                        </Col>
+                     ))}
                   </Row>
-                  <Row>
-                     <Col style={{ paddingRight: 0 }}>
-                        <Form.Control
-                           type="text"
-                           placeholder={'Номерний знак або VIN'}
-                           value={searchRequest}
-                           onChange={handleInputChange}
+                  {cars.length > 1 && (
+                     <Pagination style={{ marginTop: "1rem" }}>
+                        <Pagination.Prev
+                           onClick={() => handlePageChange(currentPage - 1)}
+                           disabled={currentPage === 1}
                         />
-                     </Col>
-                     <Col xs="auto">
-                        <Button variant="primary" onClick={handleSearchClick}>
-                           <FontAwesomeIcon icon={faMagnifyingGlass} />
-                        </Button>
-                     </Col>
-                  </Row>
-               </CustomForm>
+                        {Array.from({ length: cars.length }, (_, index) => (
+                           <Pagination.Item
+                              key={index}
+                              active={index + 1 === currentPage}
+                              onClick={() => handlePageChange(index + 1)}
+                           >
+                              {index + 1}
+                           </Pagination.Item>
+                        ))}
+                        <Pagination.Next
+                           onClick={() => handlePageChange(currentPage + 1)}
+                           disabled={currentPage === cars.length}
+                        />
+                     </Pagination>
+                  )}
+               </>
             )}
-            <Row>
-               {paginatedCars.map((car, index) => (
-                  <Col key={index} lg={4} md={6} sm={12}>
-                     <CarCard car={car} onCarSelect={handleCarSelect} isSelected={selectedCars.includes(car)} />
-                  </Col>
-               ))}
-            </Row>
-            {cars.length > 1 && (
-               <Pagination style={{ marginTop: "1rem" }}>
-                  <Pagination.Prev
-                     onClick={() => handlePageChange(currentPage - 1)}
-                     disabled={currentPage === 1}
-                  />
-                  {Array.from({ length: cars.length }, (_, index) => (
-                     <Pagination.Item
-                        key={index}
-                        active={index + 1 === currentPage}
-                        onClick={() => handlePageChange(index + 1)}
-                     >
-                        {index + 1}
-                     </Pagination.Item>
-                  ))}
-                  <Pagination.Next
-                     onClick={() => handlePageChange(currentPage + 1)}
-                     disabled={currentPage === cars.length}
-                  />
-               </Pagination>
+            {radioValue == '3' && (
+               <>
+                  <CustomForm>
+                     <Row>
+                        <Form.Label>{'Перевірка авто по марці та моделі'}</Form.Label>
+                     </Row>
+                     <Row>
+                        <Col>
+                           <Form.Control
+                              type="text"
+                              placeholder="Марка"
+                              value={modelSearch.vendor}
+                              onChange={(e) => setModelSearch({ ...modelSearch, vendor: e.target.value })}
+                           />
+                        </Col>
+                        <Col style={{ padding: 0 }}>
+                           <Form.Control
+                              type="text"
+                              placeholder="Модель"
+                              value={modelSearch.model}
+                              onChange={(e) => setModelSearch({ ...modelSearch, model: e.target.value })}
+                           />
+                        </Col>
+                        <Col xs="auto">
+                           <Button variant="primary" onClick={fetchModel}>
+                              <FontAwesomeIcon icon={faMagnifyingGlass} />
+                           </Button>
+                        </Col>
+                     </Row>
+                  </CustomForm>
+                  <ModelCard model={model}/>
+               </>
             )}
             <CompareModal
                showModal={showCompareModal}
