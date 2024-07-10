@@ -50,9 +50,9 @@ const CarCard: React.FC<CarCardProps> = ({ car, onCarSelect, isSelected }) => {
                <strong>Тип: </strong> {car.kind.ua}<br />
                <strong>Паливо: </strong> {car.fuel.ua}<br />
                <strong>Зареєстровано: </strong> {car.registered_at}<br />
-               {car.price !== "Н/Д" && (
+               {car.price !== null && car.price !== "Н/Д" && (
                   <>
-                     <strong>Ціна: </strong> {car.price}
+                     <strong>Ціна: </strong> {car.price.toLocaleString()} грн
                   </>
                )}
             </Card.Text>

@@ -8,7 +8,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 import CarCard from '../CarCard/CarCard';
 import ModelCard from '../ModelCard/ModelCard';
-import getPrice from '../../utils/getPrice';
 import CompareModal from '../Modals/CompareModal';
 import MapModal from '../Modals/MapModal';
 
@@ -88,14 +87,6 @@ const App: FC<AppProps> = () => {
          setRegions([]);
 
          const carsData: Car[] = await Promise.all(response.data.operations.map(async (operation: any, index: number) => {
-            let price = 'Н/Д';
-            if (index === 0) {
-               try {
-                  const fetchedPrice = await getPrice(searchRequest.replace(/\s+/g, ''));
-                  price = fetchedPrice + ' грн';
-               } catch (error) { }
-            }
-
             const carData: Car = {
                isLast: operation.isLast,
                registered_at: operation.registered_at,
@@ -113,23 +104,25 @@ const App: FC<AppProps> = () => {
                   ua: operation.fuel.ua.charAt(0).toUpperCase() + operation.fuel.ua.slice(1).toLowerCase(),
                },
                photo_url: '',
-               price: price,
+               price: '',
             };
 
             setRegions(prevRegions => [...prevRegions, carData.address]);
 
             try {
-               const imageResponse = await axios.get(`https://baza-gai.com.ua/make/${removeSpaces(operation.vendor)}/${removeSpaces(operation.model)}`, {
+               const modelResponse = await axios.get(`https://baza-gai.com.ua/make/${removeSpaces(operation.vendor)}/${removeSpaces(operation.model)}`, {
                   headers: {
                      "Accept": "application/json",
                      "X-Api-Key": key
                   }
                });
 
-               carData.photo_url = imageResponse.data.catalog_model.photo_url;
+               carData.photo_url = modelResponse.data.catalog_model.photo_url;
+               carData.price = modelResponse.data.catalog_model.price_avg;
             } catch (error) {
-               console.error('Error fetching car image:', error);
+               console.error('Error fetching car model:', error);
 
+               carData.price = "Н/Д";
                carData.photo_url = "https://baza-gai.com.ua/auto-placeholder.svg";
             }
 
