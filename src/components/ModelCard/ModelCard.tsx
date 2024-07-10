@@ -36,7 +36,11 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
             <Card.Subtitle className="mb-2 text-muted">{model.catalog_model.year_from} - {model.catalog_model.year_to === null ? 'Сьогодні' : model.catalog_model.year_to}</Card.Subtitle>
             <Card.Text style={{ marginBottom: 0 }}>
                <strong>Реєстрацій: </strong> {model.catalog_model.plate_count.toLocaleString('uk-UA')}<br />
-               <strong>Середня ціна: </strong> {model.catalog_model.price_avg.toLocaleString('uk-UA')} грн<br />
+               {model.catalog_model.price_avg !== null && (
+                  <>
+                     <strong>Середня ціна: </strong> {model.catalog_model.price_avg.toLocaleString('uk-UA')} грн<br />
+                  </>
+               )}
             </Card.Text>
          </Card.Body>
       </Card>
