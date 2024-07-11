@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/TeamProject/static/css/main.ff02f4b5.css",
-    "main.js": "/TeamProject/static/js/main.ca718f07.js",
+    "main.js": "/TeamProject/static/js/main.c56806e3.js",
     "static/js/453.d85580f4.chunk.js": "/TeamProject/static/js/453.d85580f4.chunk.js",
     "static/media/ukraine.svg": "/TeamProject/static/media/ukraine.e5abe62448e7eac9160c365d36e3da65.svg",
     "index.html": "/TeamProject/index.html",
     "main.ff02f4b5.css.map": "/TeamProject/static/css/main.ff02f4b5.css.map",
-    "main.ca718f07.js.map": "/TeamProject/static/js/main.ca718f07.js.map",
+    "main.c56806e3.js.map": "/TeamProject/static/js/main.c56806e3.js.map",
     "453.d85580f4.chunk.js.map": "/TeamProject/static/js/453.d85580f4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.ff02f4b5.css",
-    "static/js/main.ca718f07.js"
+    "static/js/main.c56806e3.js"
   ]
 }
