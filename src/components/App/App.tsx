@@ -15,7 +15,7 @@ import MapModal from '../Modals/MapModal';
 import { Plate } from '../PlateCard/PlateCard'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faScaleBalanced, faMapLocationDot, faEraser, faScrewdriverWrench, faMagnifyingGlass, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faScaleBalanced, faMapLocationDot, faEraser, faScrewdriverWrench, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 
 interface AppProps { }
 
@@ -436,7 +436,7 @@ const App: FC<AppProps> = () => {
                         </Col>
                         <Col xs="auto">
                            <Button variant="primary" onClick={handleFetchPlates}>
-                              <FontAwesomeIcon icon={faSearch} />
+                              <FontAwesomeIcon icon={faMagnifyingGlass} />
                            </Button>
                         </Col>
                      </Row>
