@@ -7,12 +7,15 @@ import { Alert, ButtonGroup, ToggleButton, Form, Button, Row, Col, Pagination, D
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import CarCard from '../CarCard/CarCard';
+import PlateCard from '../PlateCard/PlateCard'
 import ModelCard from '../ModelCard/ModelCard';
 import CompareModal from '../Modals/CompareModal';
 import MapModal from '../Modals/MapModal';
 
+import { Plate } from '../PlateCard/PlateCard'
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faScaleBalanced, faMapLocationDot, faEraser, faScrewdriverWrench, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faScaleBalanced, faMapLocationDot, faEraser, faScrewdriverWrench, faMagnifyingGlass, faSearch } from '@fortawesome/free-solid-svg-icons';
 
 interface AppProps { }
 
@@ -53,6 +56,7 @@ const App: FC<AppProps> = () => {
    const [cars, setCars] = useState<Car[]>([]);
    const [selectedCars, setSelectedCars] = useState<Car[]>([]);
    const [regions, setRegions] = useState<string[]>([]);
+   const [selectedRegion, setSelectedRegion] = useState<string>('kyiv');
 
    const [currentPage, setCurrentPage] = useState(1);
    const [searchRequest, setSearchRequest] = useState<string>('');
@@ -64,6 +68,9 @@ const App: FC<AppProps> = () => {
 
    const [modelSearch, setModelSearch] = useState({ vendor: '', model: '' });
    const [model, setModel] = useState<Model>();
+   const [plates, setPlates] = useState<Plate[]>([]);
+
+
 
    const removeSpaces = (str: string) => {
       return str.toLowerCase().trim().replace(/[^\w\s-]/gi, '').replace(/\s+/g, '-');
@@ -172,6 +179,40 @@ const App: FC<AppProps> = () => {
          console.error('Error fetching model data:', error);
          setError('Нічого не знайдено.');
       }
+   };
+
+   const fetchPlatesByRegion = async () => {
+      if (key === "") {
+         setError('Відсутній API ключ.');
+         return;
+      }
+
+      try {
+
+         let url = `https://baza-gai.com.ua/search?region=${selectedRegion}`;
+         const response = await axios.get(url, {
+            headers: {
+               "Accept": "application/json",
+               "X-Api-Key": key
+            }
+         });
+
+         setPlates(response.data.plates);
+         setError('');
+      } catch (error) {
+         console.error('Error fetching plates data:', error);
+         setError('Нічого не знайдено.');
+      }
+   };
+
+   
+
+   const handleFetchPlates = () => {
+      fetchPlatesByRegion();
+   };
+
+   const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedRegion(e.target.value);
    };
 
    const handlePageChange = (page: number) => {
@@ -345,6 +386,71 @@ const App: FC<AppProps> = () => {
                      </Row>
                   </CustomForm>
                   <ModelCard model={model}/>
+               </>
+            )}
+
+            {radioValue === '2' && (
+               <>
+                  <CustomForm>
+                     <Row>
+                        <Form.Label>{'Вибір області'}</Form.Label>
+                     </Row>
+                     <Row>
+                        <Col>
+                           <Form.Control
+                              as="select"
+                              name="region"
+                              id="region"
+                              className="form-control"
+                              value={selectedRegion}
+                              onChange={(e) => setSelectedRegion(e.target.value)}
+                           >
+                              <option value="kyiv">м. Київ</option>
+                              <option value="kyivska-oblast">Київська область</option>
+                              <option value="vinnytsia-oblast">Вінницька область</option>
+                              <option value="volyn-oblast">Волинська область</option>
+                              <option value="dnipropetrovsk-oblast">Дніпропетровська область</option>
+                              <option value="crimea">АР Крим</option>
+                              <option value="donetsk-oblast">Донецька область</option>
+                              <option value="zhytomyr-oblast">Житомирська область</option>
+                              <option value="zakarpattia-oblast">Закарпатська область</option>
+                              <option value="zaporizhia-oblast">Запорізька область</option>
+                              <option value="ivano-frankivsk-oblast">Івано-Франківська область</option>
+                              <option value="kirovohrad-oblast">Кіровоградська область</option>
+                              <option value="luhansk-oblast">Луганська область</option>
+                              <option value="lviv-oblast">Львівська область</option>
+                              <option value="mykolaiv-oblast">Миколаївська область</option>
+                              <option value="odessa-oblast">Одеська область</option>
+                              <option value="poltava-oblast">Полтавська область</option>
+                              <option value="rivne-oblast">Рівненська область</option>
+                              <option value="sevastopol">Севастополь</option>
+                              <option value="sumy-oblast">Сумська область</option>
+                              <option value="ternopil-oblast">Тернопільська область</option>
+                              <option value="kharkiv-oblast">Харківська область</option>
+                              <option value="kherson-oblast">Херсонська область</option>
+                              <option value="khmelnytskyi-oblast">Хмельницька область</option>
+                              <option value="cherkasy-oblast">Черкаська область</option>
+                              <option value="chernihiv-oblast">Чернігівська область</option>
+                              <option value="chernivtsi-oblast">Чернівецька область</option>
+                           </Form.Control>
+                        </Col>
+                        <Col xs="auto">
+                           <Button variant="primary" onClick={handleFetchPlates}>
+                              <FontAwesomeIcon icon={faSearch} />
+                           </Button>
+                        </Col>
+                     </Row>
+                     </CustomForm>
+                     <CustomForm style={{ width: '250%' }}>
+                     <Row>
+                        {plates.map((plate, index) => (
+                           <Col key={index} lg={4} md={6} sm={12}>
+                              <PlateCard plate={plate} />
+                           </Col>
+                        ))}
+                     </Row>
+                     {error && <Alert variant="danger">{error}</Alert>}
+                  </CustomForm>
                </>
             )}
             <CompareModal

@@ -13,6 +13,7 @@ interface MapModalProps {
     showModal: boolean;
     setShowModal: (show: boolean) => void;
     regions: string[];
+    
 }
 
 const MapModal: FC<MapModalProps> = ({ showModal, setShowModal, regions }) => {
